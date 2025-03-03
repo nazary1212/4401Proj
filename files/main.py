@@ -53,11 +53,11 @@ def historical_weather(date, location,time):
         print(f"Error: {response.status_code}")
         print(response.text)
         return None
-#test
+
+#-----------------TEST ------------------#
 #historical_weather('2020-01-01','London, Ontario', "12:00:00" )
 
-import requests
-
+# GO TRAIN API (Real Time Issues)
 #NOT WORKING, URL ISSUE FIX LATER 
 def get_go_train_updates(api_key):
     """
@@ -104,6 +104,7 @@ def get_go_train_updates(api_key):
         print(f"Error fetching GO Train updates: {e}")
         return []
 
+#-----------------TEST ------------------#
 '''
 # Example usage
 api_key = 30025066
@@ -116,7 +117,7 @@ for train in train_updates:
 '''
 
 
-
+# GOOGLE MAPS API
 #NOT WORKING AS NEEDED BUT DECENT START, 
 def get_google_routes(start_lat, start_lon, end_lat, end_lon, api_key):
     url = "https://maps.googleapis.com/maps/api/directions/json"
@@ -156,15 +157,18 @@ def extract_transit_details(routes):
                     route_details.append(transit_info)
     return route_details
 
+
+#-----------------TEST ------------------#
+'''
 # Example usage
-api_key = 'AIzaSyDK3GUEaghumkJE7dSVkHwzy7WZZkgX6Ks'
+api_key = 'insertt'
 
 # Define start and end coordinates 
 start_lat, start_lon = 43.6861, -79.5097  # 90 Cordova Ave, Etobicoke
 end_lat, end_lon = 43.3256, -79.7997     # 1280 Main St W, Hamilton
 
 
-#PROBABLY NEEDS FIXING 
+#THIS SECTION PROBABLY NEEDS FIXING 
 routes = get_google_routes(start_lat, start_lon, end_lat, end_lon, api_key)
 if routes:
     transit_details = extract_transit_details(routes)
@@ -174,4 +178,93 @@ if routes:
             for key, value in detail.items():
                 print(f"{key.replace('_', ' ').capitalize()}: {value}")
             print()
+'''
 
+
+#TTC Transit Github Repo 
+# https://github.com/JasonYao3/TTC_transit_delay_proj/tree/master
+
+# This repo has a pretty in depth study for how they got their values for delays at certain times, bus routes with higest delay ....
+# We can hardcode this info and feed them as features into our NN 
+
+
+# HERE API 
+
+import requests
+import json  # For pretty-printing the JSON response
+
+def get_transit_routes(api_key, origin, destination):
+    """
+    Fetches transit routes between two locations using the HERE API and processes the response.
+    
+    Parameters:
+        api_key (str): Your HERE API Key.
+        origin (str): Latitude,Longitude of the starting location.
+        destination (str): Latitude,Longitude of the destination.
+
+    Returns:
+        Processed transit route information.
+    """
+    url = f"https://transit.router.hereapi.com/v8/routes?apikey={api_key}&origin={origin}&destination={destination}&return=intermediate,travelSummary"
+
+    response = requests.get(url)
+    
+    if response.status_code != 200:
+        print("Error fetching data:", response.json())
+        return
+
+    data = response.json()
+    return parse_here_api(data)
+
+def parse_here_api(response):
+    structured_data = []
+    
+    for route in response.get("routes", []):
+        for section in route.get("sections", []):
+            section_info = {
+                "Section": {
+                    "Type": section.get("type"),
+                    "Travel Summary": {
+                        "Duration (s)": section.get("travelSummary", {}).get("duration"),
+                        "Length (m)": section.get("travelSummary", {}).get("length")
+                    }
+                },
+                "Departure": {
+                    "Type": section.get("departure", {}).get("place", {}).get("type"),
+                    "Location": section.get("departure", {}).get("place", {}).get("location"),
+                    "Wheelchair Accessible": section.get("departure", {}).get("place", {}).get("wheelchairAccessible", "Unknown")
+                },
+                "Arrival": {
+                    "Name": section.get("arrival", {}).get("place", {}).get("name"),
+                    "Type": section.get("arrival", {}).get("place", {}).get("type"),
+                    "Location": section.get("arrival", {}).get("place", {}).get("location"),
+                    "Wheelchair Accessible": section.get("arrival", {}).get("place", {}).get("wheelchairAccessible", "Unknown")
+                }
+            }
+            
+            # If transport mode is bus, subway, or train, include additional details
+            transport = section.get("transport", {})
+            if transport.get("mode") in ["bus", "subway", "regionalTrain"]:
+                section_info["Transport"] = {
+                    "Mode": transport.get("mode"),
+                    "Name": transport.get("name"),
+                    "Headsign": transport.get("headsign"),
+                    "Category": transport.get("category"),
+                    "Short Name": transport.get("shortName"),
+                    "Long Name": transport.get("longName"),
+                    "Color": transport.get("color"),
+                    "Text Color": transport.get("textColor"),
+                    "Wheelchair Accessible": transport.get("wheelchairAccessible", "Unknown")
+                }
+            
+            structured_data.append(section_info)
+    
+    return structured_data
+
+# Example Usage:
+API_KEY = "SE8BzcNeqwzk2XIkWJbAcKE0m27BIbTB2fzwSVfEOAE"
+origin = "43.62657,-79.50239"  # royal york and queensway
+destination = "43.26135,-79.91955"  # mcmaster
+
+result = get_transit_routes(API_KEY, origin, destination)
+print(json.dumps(result, indent=4))
