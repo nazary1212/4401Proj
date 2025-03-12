@@ -117,70 +117,6 @@ for train in train_updates:
 '''
 
 
-# GOOGLE MAPS API
-#NOT WORKING AS NEEDED BUT DECENT START, 
-def get_google_routes(start_lat, start_lon, end_lat, end_lon, api_key):
-    url = "https://maps.googleapis.com/maps/api/directions/json"
-    params = {
-        'origin': f'{start_lat},{start_lon}',
-        'destination': f'{end_lat},{end_lon}',
-        'mode': 'transit',
-        'key': api_key
-    }
-    response = requests.get(url, params=params)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        return None
-
-
-def extract_transit_details(routes):
-    if not routes or 'routes' not in routes or len(routes['routes']) == 0:
-        return "No routes found."
-    
-    route_details = []
-    for route in routes['routes']:
-        for leg in route['legs']:
-            for step in leg['steps']:
-                if 'transit_details' in step:
-                    transit = step['transit_details']
-                    transit_info = {
-                        'line_name': transit['line']['name'],
-                        'vehicle_type': transit['line']['vehicle']['type'],
-                        'departure_stop': transit['departure_stop']['name'],
-                        'arrival_stop': transit['arrival_stop']['name'],
-                        'headsign': transit['headsign'],
-                        'arrival_time': transit['arrival_time']['text'],
-                        'departure_time': transit['departure_time']['text'],
-                        'num_stops': transit['num_stops']
-                    }
-                    route_details.append(transit_info)
-    return route_details
-
-
-#-----------------TEST ------------------#
-'''
-# Example usage
-api_key = 'insertt'
-
-# Define start and end coordinates 
-start_lat, start_lon = 43.6861, -79.5097  # 90 Cordova Ave, Etobicoke
-end_lat, end_lon = 43.3256, -79.7997     # 1280 Main St W, Hamilton
-
-
-#THIS SECTION PROBABLY NEEDS FIXING 
-routes = get_google_routes(start_lat, start_lon, end_lat, end_lon, api_key)
-if routes:
-    transit_details = extract_transit_details(routes)
-    if transit_details:
-        for i, detail in enumerate(transit_details, start=1):
-            print(f"Transit Segment {i}:")
-            for key, value in detail.items():
-                print(f"{key.replace('_', ' ').capitalize()}: {value}")
-            print()
-'''
-
-
 #TTC Transit Github Repo 
 # https://github.com/JasonYao3/TTC_transit_delay_proj/tree/master
 
@@ -188,10 +124,8 @@ if routes:
 # We can hardcode this info and feed them as features into our NN 
 
 
-# HERE API 
+# HERE API FOR TRASNIT ROUTES -- Works well, only gives one route but it is the optimal one ( cross checking with google maps)
 
-import requests
-import json  # For pretty-printing the JSON response
 
 def get_transit_routes(api_key, origin, destination):
     """
@@ -260,7 +194,7 @@ def parse_here_api(response):
             structured_data.append(section_info)
     
     return structured_data
-
+ 
 # Example Usage:
 API_KEY = "SE8BzcNeqwzk2XIkWJbAcKE0m27BIbTB2fzwSVfEOAE"
 origin = "43.62657,-79.50239"  # royal york and queensway
