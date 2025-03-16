@@ -1,0 +1,39 @@
+PLAN FOR WEATHER API: 
+
+- Find a weather api that has historical toronto area weather that includes precipitation, type, and amount
+- combine this with ttc/subway delay data 
+- create a simple regression ML model that predicts delay given precipitation, type, amount, temp... as features 
+
+Once the ML model is trained and has decent accuracy
+
+We can then obtain historical weather for a date and then find the "odds" of there being precipitation/amount/weather.. whatever features we need 
+and then be able to feed that into the model, and the percentage we get of precip/amount occuring we can use as metric for sd and man in our monte carlo sim 
+
+Here is an example 
+
+User travel date: May 10th @ 3:00pm 
+
+Call api to get historical weather from May 8-12 from the last 2 year ( 8 data points)
+After avg all the values we get 
+Avg temp: 18 degrees 
+Rain Chance : 25% (instances / total days )
+Snow Chance : 0% 
+Rain Amount 2mm (Sum of rain amount/ instances of rain)
+Snow Amount 0mm 
+Windy ? ( could be a yes or not parameter for excessive winds maybe)
+... any other relevant features 
+
+Plug these values into our trianed ML model 
+
+Our output should be how much extra time our journey should take 
+
+
+More on the ML model for clarity: 
+
+There should be a correlation as to how much rain/snow amount attributes to delay. The correlation will likely be that more precip/amount will correlate to greater delays,
+and this would be found by comparing a day without any weather events that would impact transit
+
+NOTE: 
+The file with ttc data has delay type, our ML should probably only use General Delay & Late Leaving Garage type delays because these can directly be correlated to weather. A 
+correlation analysis could be done to see weather this is true or not, but logically a mechanical/ emergancy service delay likely has more to do with outside factors rather than 
+directly to do with weather. 
