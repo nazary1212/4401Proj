@@ -68,7 +68,7 @@ def get_go_train_delays(api_key, route_code):
     }
 
 # Example usage:
-if __name__ == "__main__":
+# if __name__ == "__main__":
     api_key = "30025066" 
     route_code = "LW"
     delays_info = get_go_train_delays(api_key, route_code)
@@ -167,8 +167,8 @@ def parse_here_api(response):
 
 # Example Usage:
 API_KEY = "SE8BzcNeqwzk2XIkWJbAcKE0m27BIbTB2fzwSVfEOAE"
-origin = "43.62657,-79.50239"  #royal york and queensway
-destination = "43.26135,-79.91955"  #mcmaster
+origin = "43.67913,-79.51035"  # Royal York and Queensway
+destination = "43.45581,-79.68252"  # McMaster
 
 result = get_transit_routes(API_KEY, origin, destination)
 print(json.dumps(result, indent=4))
